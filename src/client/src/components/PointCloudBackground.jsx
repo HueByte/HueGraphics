@@ -303,7 +303,7 @@ const PointCloudBackground = ({ pointCloudId }) => {
 					colorAttr.needsUpdate = true;
 				}
 				else if (cameraDistanceColoring) {
-					// Distance from camera coloring
+					// Distance from camera coloring with multi-step gradient
 					const camPos = camera.position;
 					let minDist = Infinity, maxDist = -Infinity;
 
@@ -319,21 +319,49 @@ const PointCloudBackground = ({ pointCloudId }) => {
 					}
 					const distRange = maxDist - minDist;
 
-					// Apply gradient based on camera distance
+					// Apply multi-step gradient: cyan -> blue -> purple -> deep purple -> black
 					for (let i = 0; i < posAttr.count; i++) {
 						const i3 = i * 3;
 						const dx = posAttr.array[i3] - camPos.x;
 						const dy = posAttr.array[i3 + 1] - camPos.y;
 						const dz = posAttr.array[i3 + 2] - camPos.z;
 						const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-						const t = distRange > 0 ? (dist - minDist) / distRange : 0.5;
+						let t = distRange > 0 ? (dist - minDist) / distRange : 0.5;
 
-						// Bright purple to black gradient (close = purple, far = black)
-						// Close (t=0): Bright purple (138, 43, 226)
-						// Far (t=1): Black (0, 0, 0)
-						colorAttr.array[i3] = 0.54 * (1 - t); // R: 138/255 -> 0
-						colorAttr.array[i3 + 1] = 0.17 * (1 - t); // G: 43/255 -> 0
-						colorAttr.array[i3 + 2] = 0.89 * (1 - t); // B: 226/255 -> 0
+						// Apply smooth easing for better gradient transitions
+						t = t * t * (3 - 2 * t); // Smoothstep function
+
+						let r, g, b;
+
+						if (t < 0.25) {
+							// Cyan (0, 200, 255) -> Blue (0, 100, 255)
+							const local = t / 0.25;
+							r = 0;
+							g = 0.78 * (1 - local) + 0.39 * local;
+							b = 1.0;
+						} else if (t < 0.5) {
+							// Blue (0, 100, 255) -> Purple (138, 43, 226)
+							const local = (t - 0.25) / 0.25;
+							r = 0.54 * local;
+							g = 0.39 * (1 - local) + 0.17 * local;
+							b = 1.0 * (1 - local) + 0.89 * local;
+						} else if (t < 0.75) {
+							// Purple (138, 43, 226) -> Deep Purple (82, 34, 88)
+							const local = (t - 0.5) / 0.25;
+							r = 0.54 * (1 - local) + 0.32 * local;
+							g = 0.17 * (1 - local) + 0.13 * local;
+							b = 0.89 * (1 - local) + 0.35 * local;
+						} else {
+							// Deep Purple (82, 34, 88) -> Black (0, 0, 0)
+							const local = (t - 0.75) / 0.25;
+							r = 0.32 * (1 - local);
+							g = 0.13 * (1 - local);
+							b = 0.35 * (1 - local);
+						}
+
+						colorAttr.array[i3] = r;
+						colorAttr.array[i3 + 1] = g;
+						colorAttr.array[i3 + 2] = b;
 					}
 					colorAttr.needsUpdate = true;
 				}

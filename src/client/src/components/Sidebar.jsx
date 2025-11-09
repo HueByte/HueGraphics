@@ -1,14 +1,78 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { MdChevronRight } from 'react-icons/md';
 import './Sidebar.css';
 
 function Sidebar({ isOpen, onClose, customContent }) {
   const location = useLocation();
+  const [expandedItems, setExpandedItems] = useState(['cloud-points']); // Expanded by default
 
   const defaultMenuItems = [
     { path: '/', label: 'Home' },
-    { path: '/cloud-points', label: 'Cloud Points Visualizer' },
+    {
+      id: 'cloud-points',
+      path: '/cloud-points',
+      label: 'Cloud Points Visualizer',
+      children: [
+        { path: '/models-gallery', label: 'Models Gallery' },
+      ]
+    },
   ];
+
+  const toggleExpand = (itemId) => {
+    setExpandedItems(prev =>
+      prev.includes(itemId)
+        ? prev.filter(id => id !== itemId)
+        : [...prev, itemId]
+    );
+  };
+
+  const isItemActive = (item) => {
+    if (item.children) {
+      return location.pathname === item.path || item.children.some(child => location.pathname === child.path);
+    }
+    return location.pathname === item.path;
+  };
+
+  const renderMenuItem = (item) => {
+    if (item.children) {
+      const isExpanded = expandedItems.includes(item.id);
+      const isActive = isItemActive(item);
+
+      return (
+        <React.Fragment key={item.id}>
+          <div
+            className={`sidebar-link parent ${isExpanded ? 'expanded' : ''} ${isActive ? 'active' : ''}`}
+            onClick={() => toggleExpand(item.id)}
+          >
+            <span>{item.label}</span>
+            <MdChevronRight className="expand-icon" />
+          </div>
+          {isExpanded && item.children.map(child => (
+            <Link
+              key={child.path}
+              to={child.path}
+              className={`sidebar-link nested ${location.pathname === child.path ? 'active' : ''}`}
+              onClick={onClose}
+            >
+              {child.label}
+            </Link>
+          ))}
+        </React.Fragment>
+      );
+    }
+
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        className={`sidebar-link ${location.pathname === item.path ? 'active' : ''}`}
+        onClick={onClose}
+      >
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -42,16 +106,7 @@ function Sidebar({ isOpen, onClose, customContent }) {
           {customContent ? (
             customContent.content
           ) : (
-            defaultMenuItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`sidebar-link ${location.pathname === item.path ? 'active' : ''}`}
-                onClick={onClose}
-              >
-                {item.label}
-              </Link>
-            ))
+            defaultMenuItems.map(renderMenuItem)
           )}
         </nav>
       </aside>

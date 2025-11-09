@@ -1,0 +1,250 @@
+.models-gallery-page {
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.page-header h1 {
+  background: linear-gradient(90deg, var(--fg), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.page-description {
+  color: var(--muted);
+  font-size: 1.1rem;
+  max-width: 800px;
+}
+
+/* Models Grid */
+.models-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.model-card {
+  padding: 2rem;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.model-card:hover {
+  transform: translateY(-4px);
+}
+
+.model-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(168, 85, 247, 0.2));
+  color: var(--accent-purple);
+  margin: 0 auto;
+}
+
+.model-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.model-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0;
+  text-align: center;
+}
+
+.model-description {
+  color: var(--fg-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+  margin: 0;
+}
+
+.model-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--fg-muted);
+  font-size: 0.85rem;
+}
+
+.meta-item svg {
+  color: var(--accent-tertiary);
+  flex-shrink: 0;
+}
+
+.model-stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.stat-badge {
+  padding: 0.4rem 0.8rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.format-badge {
+  background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(168, 85, 247, 0.2));
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-message,
+.no-models {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  gap: 1rem;
+  border-radius: 16px;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(138, 43, 226, 0.2);
+  border-top-color: var(--accent-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-message {
+  border: 1px solid rgba(198, 60, 81, 0.5);
+  background: linear-gradient(
+    135deg,
+    rgba(198, 60, 81, 0.1),
+    rgba(82, 34, 88, 0.1)
+  );
+}
+
+.no-models {
+  color: var(--fg-muted);
+}
+
+.no-models svg {
+  color: var(--accent-purple);
+  opacity: 0.5;
+}
+
+.no-models h3 {
+  color: var(--fg);
+  margin: 0.5rem 0;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .models-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+
+  .page-description {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .models-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .model-card {
+    padding: 1.5rem;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .page-description {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .model-card {
+    padding: 1.25rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .page-description {
+    font-size: 0.9rem;
+  }
+
+  .model-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .model-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .model-name {
+    font-size: 1.1rem;
+  }
+
+  .loading-container,
+  .error-message,
+  .no-models {
+    padding: 2rem 1rem;
+  }
+}
