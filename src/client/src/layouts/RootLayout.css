@@ -14,9 +14,23 @@
   padding-top: calc(48px + 3rem);
 }
 
+@media (max-width: 1024px) {
+  .main-content {
+    padding: 2rem;
+    padding-top: calc(48px + 2.5rem);
+  }
+}
+
 @media (max-width: 768px) {
   .main-content {
-    padding: 1rem;
+    padding: 1.5rem;
     padding-top: calc(44px + 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 1rem;
+    padding-top: calc(44px + 1.5rem);
   }
 }

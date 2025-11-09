@@ -54,7 +54,25 @@
   font-weight: 500;
 }
 
-/* Hide on mobile */
+/* Tablet adjustments */
+@media (max-width: 1200px) {
+  .page-nav {
+    right: 1rem;
+    top: 7rem;
+  }
+
+  .page-nav-title {
+    font-size: 0.7rem;
+  }
+
+  .page-nav-list button,
+  .page-nav-list a {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Hide on mobile and small tablets */
 @media (max-width: 1024px) {
   .page-nav {
     display: none;

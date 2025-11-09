@@ -82,8 +82,63 @@
   font-size: 0.9rem;
 }
 
+@media (max-width: 1024px) {
+  .visualizer-container {
+    min-height: 500px;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+  }
+
+  .page-description {
+    font-size: 1rem;
+  }
+}
+
 @media (max-width: 768px) {
   .visualizer-container {
     min-height: 400px;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  .page-description {
+    font-size: 0.95rem;
+  }
+
+  .pc-name {
+    font-size: 0.8rem;
+  }
+
+  .pc-meta {
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .visualizer-container {
+    min-height: 350px;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .page-description {
+    font-size: 0.9rem;
+  }
+
+  .loading-container,
+  .error-message,
+  .no-selection,
+  .no-models {
+    padding: 2rem 1rem;
   }
 }

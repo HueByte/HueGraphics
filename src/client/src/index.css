@@ -149,9 +149,62 @@ a:hover {
   );
 }
 
+/* Touch-friendly adjustments */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger tap targets for touch devices */
+  button, a, input[type="button"], input[type="submit"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Responsive */
+@media (max-width: 1024px) {
+  :root {
+    font-size: 15px;
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  }
+}
+
 @media (max-width: 768px) {
-  body {
+  :root {
     font-size: 14px;
+  }
+
+  body {
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  h2 {
+    font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    font-size: 13px;
+  }
+
+  body {
+    line-height: 1.5;
+  }
+
+  h1 {
+    font-size: clamp(1.35rem, 2.75vw, 1.75rem);
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
   }
 }
