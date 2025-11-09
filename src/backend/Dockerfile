@@ -4,16 +4,17 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy solution and project files
-COPY ["HueGraphics.API/HueGraphics.API.csproj", "HueGraphics.API/"]
-COPY ["HueGraphics.Application/HueGraphics.Application.csproj", "HueGraphics.Application/"]
-COPY ["HueGraphics.Domain/HueGraphics.Domain.csproj", "HueGraphics.Domain/"]
-COPY ["HueGraphics.Infrastructure/HueGraphics.Infrastructure.csproj", "HueGraphics.Infrastructure/"]
+COPY ["backend/HueGraphics.API/HueGraphics.API.csproj", "HueGraphics.API/"]
+COPY ["backend/HueGraphics.Application/HueGraphics.Application.csproj", "HueGraphics.Application/"]
+COPY ["backend/HueGraphics.Domain/HueGraphics.Domain.csproj", "HueGraphics.Domain/"]
+COPY ["backend/HueGraphics.Core/HueGraphics.Core.csproj", "HueGraphics.Core/"]
+COPY ["backend/HueGraphics.Infrastructure/HueGraphics.Infrastructure.csproj", "HueGraphics.Infrastructure/"]
 
 # Restore dependencies
 RUN dotnet restore "HueGraphics.API/HueGraphics.API.csproj"
 
-# Copy remaining source code
-COPY . .
+# Copy remaining backend source code
+COPY backend/ .
 
 # Build the application
 WORKDIR "/src/HueGraphics.API"
@@ -43,7 +44,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Copy and build model_parser
-COPY ../model_parser /model_parser
+COPY model_parser /model_parser
 WORKDIR /model_parser
 RUN cargo build --release
 

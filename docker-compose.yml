@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
   # Backend API
   backend:
     build:
-      context: ./src/backend
-      dockerfile: Dockerfile
+      context: ./src
+      dockerfile: backend/Dockerfile
     container_name: huegraphics-backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production

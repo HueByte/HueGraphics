@@ -1,7 +1,7 @@
 # HueGraphics
 
 <div align="center">
-  <img src="https://cdn.mysticvoxel.win/assets/hue_pfp.png" alt="HueGraphics Logo" width="200"/>
+  <img src="https://cdn.voidcube.cloud/assets/hue_pfp.png" alt="HueGraphics Logo" width="200"/>
 
   **Interactive 3D Point Cloud Visualization Platform**
 
@@ -188,6 +188,7 @@ model_parser -i input_model.obj -o output_directory
 ```
 
 **Supported Formats:**
+
 - OBJ
 - FBX
 - GLTF/GLB
@@ -229,6 +230,7 @@ server {
 ## Technologies
 
 ### Frontend
+
 - **React 18** - Modern UI framework
 - **Vite** - Lightning-fast build tool
 - **Three.js** - 3D graphics rendering
@@ -236,11 +238,13 @@ server {
 - **React Router v6** - Client-side routing
 
 ### Backend
+
 - **.NET 8** - High-performance web API
 - **Clean Architecture** - Separation of concerns
 - **EPT Support** - Binary point cloud format
 
 ### Model Parser
+
 - **Rust** - High-performance model processing
 - **Assimp** - 3D model import library
 
@@ -269,7 +273,6 @@ This project is licensed under the MIT License.
 
 **HueByte**
 
-- Website: [mysticvoxel.win](https://mysticvoxel.win)
 - GitHub: [@HueByte](https://github.com/HueByte)
 
 ## Acknowledgments
