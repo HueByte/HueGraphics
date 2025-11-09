@@ -21,6 +21,8 @@ const PointCloudBackground = ({ pointCloudId }) => {
 	const [error, setError] = useState(null);
 	const [detailLevel, setDetailLevel] = useState(0.5);
 	const [animationEnabled, setAnimationEnabled] = useState(true);
+	const [depthColoringEnabled, setDepthColoringEnabled] = useState(false);
+	const [cameraDistanceColoring, setCameraDistanceColoring] = useState(false);
 
 	// Fetch point cloud data when pointCloudId changes
 	useEffect(() => {
@@ -148,11 +150,14 @@ const PointCloudBackground = ({ pointCloudId }) => {
 			positions[i * 3 + 1] = allPositions[sourceIndex * 3 + 1];
 			positions[i * 3 + 2] = allPositions[sourceIndex * 3 + 2];
 
-			// Black color
+			// Default black color
 			colors[i * 3] = 0.0;
 			colors[i * 3 + 1] = 0.0;
 			colors[i * 3 + 2] = 0.0;
 		}
+
+		// Store original positions for depth calculations
+		const originalPositionsForDepth = new Float32Array(positions);
 
 		// Create geometry with loaded point cloud data
 		const geometry = new THREE.BufferGeometry();
@@ -237,6 +242,8 @@ const PointCloudBackground = ({ pointCloudId }) => {
 
 			const updated = cameraControls.update(delta);
 
+			const posAttr = geometry.attributes.position;
+
 			// Morph from chaotic to actual shape
 			if (morphProgress < 1.0) {
 				morphProgress = Math.min(morphProgress + delta / MORPH_DURATION, 1.0);
@@ -244,7 +251,6 @@ const PointCloudBackground = ({ pointCloudId }) => {
 				// Smooth easing function
 				const t = (Math.sin((morphProgress - 0.5) * Math.PI) + 1) / 2;
 
-				const posAttr = geometry.attributes.position;
 				for (let i = 0; i < posAttr.count; i++) {
 					const i3 = i * 3;
 
@@ -256,8 +262,7 @@ const PointCloudBackground = ({ pointCloudId }) => {
 				posAttr.needsUpdate = true;
 			}
 			// Apply floating animation after morph is complete
-			else if (animationEnabled && geometry.attributes.position) {
-				const posAttr = geometry.attributes.position;
+			else if (animationEnabled) {
 				for (let i = 0; i < posAttr.count; i++) {
 					const i3 = i * 3;
 					// Add subtle sine wave floating effect
@@ -267,6 +272,77 @@ const PointCloudBackground = ({ pointCloudId }) => {
 					posAttr.array[i3 + 2] = originalPositions[i3 + 2];
 				}
 				posAttr.needsUpdate = true;
+			}
+
+			// Update colors based on visualization mode
+			if (morphProgress >= 1.0) {
+				const colorAttr = geometry.attributes.color;
+
+				if (depthColoringEnabled) {
+					// Depth-based coloring (Z-axis gradient)
+					let minZ = Infinity, maxZ = -Infinity;
+					for (let i = 0; i < posAttr.count; i++) {
+						const z = originalPositionsForDepth[i * 3 + 2];
+						if (z < minZ) minZ = z;
+						if (z > maxZ) maxZ = z;
+					}
+					const zRange = maxZ - minZ;
+
+					for (let i = 0; i < posAttr.count; i++) {
+						const i3 = i * 3;
+						const z = originalPositionsForDepth[i3 + 2];
+						const t = zRange > 0 ? (z - minZ) / zRange : 0.5;
+
+						// Purple to pink gradient based on depth
+						colorAttr.array[i3] = 0.54 + t * 0.46; // R: 138/255 -> 255/255
+						colorAttr.array[i3 + 1] = 0.17 - t * 0.17; // G: 43/255 -> 0/255
+						colorAttr.array[i3 + 2] = 0.89 + t * 0.11; // B: 226/255 -> 255/255
+					}
+					colorAttr.needsUpdate = true;
+				}
+				else if (cameraDistanceColoring) {
+					// Distance from camera coloring
+					const camPos = camera.position;
+					let minDist = Infinity, maxDist = -Infinity;
+
+					// Calculate distance range
+					for (let i = 0; i < posAttr.count; i++) {
+						const i3 = i * 3;
+						const dx = posAttr.array[i3] - camPos.x;
+						const dy = posAttr.array[i3 + 1] - camPos.y;
+						const dz = posAttr.array[i3 + 2] - camPos.z;
+						const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+						if (dist < minDist) minDist = dist;
+						if (dist > maxDist) maxDist = dist;
+					}
+					const distRange = maxDist - minDist;
+
+					// Apply gradient based on camera distance
+					for (let i = 0; i < posAttr.count; i++) {
+						const i3 = i * 3;
+						const dx = posAttr.array[i3] - camPos.x;
+						const dy = posAttr.array[i3 + 1] - camPos.y;
+						const dz = posAttr.array[i3 + 2] - camPos.z;
+						const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+						const t = distRange > 0 ? (dist - minDist) / distRange : 0.5;
+
+						// Blue to red gradient (close = blue, far = red)
+						colorAttr.array[i3] = t; // R
+						colorAttr.array[i3 + 1] = 0.3 * (1 - Math.abs(t - 0.5) * 2); // G (peak at middle)
+						colorAttr.array[i3 + 2] = 1 - t; // B
+					}
+					colorAttr.needsUpdate = true;
+				}
+				else {
+					// Reset to black
+					for (let i = 0; i < colorAttr.count; i++) {
+						const i3 = i * 3;
+						colorAttr.array[i3] = 0.0;
+						colorAttr.array[i3 + 1] = 0.0;
+						colorAttr.array[i3 + 2] = 0.0;
+					}
+					colorAttr.needsUpdate = true;
+				}
 			}
 
 			renderer.render(scene, camera);
@@ -305,7 +381,7 @@ const PointCloudBackground = ({ pointCloudId }) => {
 			material.dispose();
 			renderer.dispose();
 		};
-	}, [pointCloudData, detailLevel, animationEnabled]);
+	}, [pointCloudData, detailLevel, animationEnabled, depthColoringEnabled, cameraDistanceColoring]);
 
 	if (loading) {
 		return (
@@ -352,6 +428,32 @@ const PointCloudBackground = ({ pointCloudId }) => {
 							onChange={(e) => setAnimationEnabled(e.target.checked)}
 						/>
 						Floating Animation
+					</label>
+				</div>
+				<div className="control-group">
+					<label>
+						<input
+							type="checkbox"
+							checked={depthColoringEnabled}
+							onChange={(e) => {
+								setDepthColoringEnabled(e.target.checked);
+								if (e.target.checked) setCameraDistanceColoring(false);
+							}}
+						/>
+						Depth Gradient (Z-axis)
+					</label>
+				</div>
+				<div className="control-group">
+					<label>
+						<input
+							type="checkbox"
+							checked={cameraDistanceColoring}
+							onChange={(e) => {
+								setCameraDistanceColoring(e.target.checked);
+								if (e.target.checked) setDepthColoringEnabled(false);
+							}}
+						/>
+						Camera Distance Gradient
 					</label>
 				</div>
 			</div>
