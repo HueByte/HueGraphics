@@ -69,11 +69,23 @@
 
 ```bash
 cd src/client
+
+# Create environment configuration for development
+cp .env.example .env.development
+# Edit .env.development and set:
+# VITE_API_BASE_URL=http://localhost:5000/api
+
 npm install
 npm run dev
 ```
 
 Frontend will run on `http://localhost:5173`
+
+**Environment Variables:**
+
+- `VITE_API_BASE_URL`: API endpoint URL
+  - Development: `http://localhost:5000/api` (create `.env.development`)
+  - Production: `/api` (create `.env.production`, relative path for nginx routing)
 
 #### 2. Backend Setup
 

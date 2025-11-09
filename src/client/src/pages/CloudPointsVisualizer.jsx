@@ -68,7 +68,7 @@ function CloudPointsVisualizer() {
       {error && (
         <div className="error-message glass">
           <p>⚠️ Failed to load point clouds: {error}</p>
-          <p className="hint">Make sure the backend API is running on http://localhost:5000</p>
+          <p className="hint">Make sure the backend API is accessible</p>
         </div>
       )}
 

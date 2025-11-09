@@ -9,7 +9,6 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.env
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -441,7 +440,7 @@ pointcloud-data/
 **/appsettings.json
 **/appsettings.Development.json
 !**/appsettings.example.json
-.env
+.env*
 !.env.example
 
 # Logs
