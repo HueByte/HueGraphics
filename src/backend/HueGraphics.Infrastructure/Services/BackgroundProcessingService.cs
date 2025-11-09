@@ -66,9 +66,15 @@ public class BackgroundProcessingService : IBackgroundProcessingService
 
     private async Task ProcessModelAsync(string modelId, string zipPath, string? name, string? description)
     {
+        string? outputDir = null;
+
         try
         {
             _logger.LogInformation("Starting background processing for model {ModelId}", modelId);
+
+            // Get the GUID from the status
+            var guid = _processingStatuses.TryGetValue(modelId, out var status) ? status.Guid : Guid.NewGuid();
+
             UpdateStatus(modelId, "processing", 10);
 
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -92,7 +98,7 @@ public class BackgroundProcessingService : IBackgroundProcessingService
                 UpdateStatus(modelId, "processing", 40);
 
                 // Create output directory
-                var outputDir = Path.Combine(_pointCloudSettings.DataPath, modelId);
+                outputDir = Path.Combine(_pointCloudSettings.DataPath, modelId);
                 Directory.CreateDirectory(outputDir);
 
                 // Run model parser
@@ -103,10 +109,11 @@ public class BackgroundProcessingService : IBackgroundProcessingService
 
                 UpdateStatus(modelId, "processing", 90);
 
-                // Create metadata
+                // Create metadata with GUID
                 var metadataPath = Path.Combine(outputDir, "metadata.json");
                 var metadata = new PointCloudMetadata
                 {
+                    Guid = guid,
                     Id = modelId,
                     Name = name ?? Path.GetFileNameWithoutExtension(modelFile),
                     Description = description,
@@ -122,7 +129,7 @@ public class BackgroundProcessingService : IBackgroundProcessingService
                 await File.WriteAllTextAsync(metadataPath, metadataJson);
 
                 UpdateStatus(modelId, "completed", 100);
-                _logger.LogInformation("Successfully completed processing for model {ModelId}", modelId);
+                _logger.LogInformation("Successfully completed processing for model {ModelId} with GUID {Guid}", modelId, guid);
             }
             finally
             {
@@ -143,6 +150,20 @@ public class BackgroundProcessingService : IBackgroundProcessingService
         {
             _logger.LogError(ex, "Failed to process model {ModelId}", modelId);
             UpdateStatus(modelId, "failed", 0, ex.Message);
+
+            // Cleanup output directory on failure
+            if (outputDir != null && Directory.Exists(outputDir))
+            {
+                try
+                {
+                    _logger.LogInformation("Cleaning up failed processing output directory for {ModelId}", modelId);
+                    Directory.Delete(outputDir, true);
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logger.LogWarning(cleanupEx, "Failed to cleanup output directory for {ModelId}", modelId);
+                }
+            }
         }
     }
 

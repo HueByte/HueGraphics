@@ -21,20 +21,12 @@ function CloudPointsVisualizer() {
     // Don't poll if no point clouds
     if (pointClouds.length === 0) return;
 
-    // Check if all models have completed processing
-    const allCompleted = pointClouds.every((pc) => {
-      const status = processingStatuses[pc.guid];
-      return !status || status.status === 'completed' || status.status === 'failed';
-    });
-
-    // Stop polling if all models are completed
-    if (allCompleted && Object.keys(processingStatuses).length > 0) {
-      console.log('All models completed, stopping status polling');
-      return;
-    }
+    let isActive = true;
 
     // Poll for processing statuses using bulk API
     const interval = setInterval(async () => {
+      if (!isActive) return;
+
       try {
         // Get GUIDs of all point clouds
         const guids = pointClouds.map(pc => pc.guid).filter(Boolean);
@@ -50,14 +42,34 @@ function CloudPointsVisualizer() {
           statusMap[guid] = status;
         });
 
-        setProcessingStatuses(statusMap);
+        setProcessingStatuses(prevStatuses => {
+          const newStatuses = { ...prevStatuses, ...statusMap };
+
+          // Check if all models have completed processing
+          const allCompleted = pointClouds.every((pc) => {
+            const status = newStatuses[pc.guid];
+            return !status || status.status === 'completed' || status.status === 'failed';
+          });
+
+          // Stop polling if all models are completed
+          if (allCompleted && Object.keys(newStatuses).length > 0) {
+            console.log('All models completed, stopping status polling');
+            isActive = false;
+            clearInterval(interval);
+          }
+
+          return newStatuses;
+        });
       } catch (err) {
         console.error('Failed to fetch bulk processing status:', err);
       }
     }, 2000); // Poll every 2 seconds
 
-    return () => clearInterval(interval);
-  }, [pointClouds, processingStatuses]);
+    return () => {
+      isActive = false;
+      clearInterval(interval);
+    };
+  }, [pointClouds]);
 
   // Select model from URL parameter when point clouds are loaded
   useEffect(() => {

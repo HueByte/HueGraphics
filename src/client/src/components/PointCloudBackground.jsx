@@ -328,10 +328,12 @@ const PointCloudBackground = ({ pointCloudId }) => {
 						const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 						const t = distRange > 0 ? (dist - minDist) / distRange : 0.5;
 
-						// Blue to red gradient (close = blue, far = red)
-						colorAttr.array[i3] = t; // R
-						colorAttr.array[i3 + 1] = 0.3 * (1 - Math.abs(t - 0.5) * 2); // G (peak at middle)
-						colorAttr.array[i3 + 2] = 1 - t; // B
+						// Bright purple to black gradient (close = purple, far = black)
+						// Close (t=0): Bright purple (138, 43, 226)
+						// Far (t=1): Black (0, 0, 0)
+						colorAttr.array[i3] = 0.54 * (1 - t); // R: 138/255 -> 0
+						colorAttr.array[i3 + 1] = 0.17 * (1 - t); // G: 43/255 -> 0
+						colorAttr.array[i3 + 2] = 0.89 * (1 - t); // B: 226/255 -> 0
 					}
 					colorAttr.needsUpdate = true;
 				}
