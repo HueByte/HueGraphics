@@ -4,6 +4,7 @@ namespace HueGraphics.Core.Models;
 
 public class PointCloudMetadata
 {
+    public Guid Guid { get; set; } = Guid.NewGuid();
     public required string Id { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }

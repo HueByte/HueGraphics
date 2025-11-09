@@ -27,10 +27,11 @@ public class BackgroundProcessingService : IBackgroundProcessingService
         _processingStatuses = new ConcurrentDictionary<string, ProcessingStatus>();
     }
 
-    public void QueueModelProcessing(string modelId, string zipPath, string? name, string? description)
+    public void QueueModelProcessing(string modelId, string zipPath, string? name, string? description, Guid guid)
     {
         var status = new ProcessingStatus
         {
+            Guid = guid,
             Id = modelId,
             Status = "pending",
             Progress = 0,
@@ -46,6 +47,21 @@ public class BackgroundProcessingService : IBackgroundProcessingService
     public ProcessingStatus? GetProcessingStatus(string modelId)
     {
         return _processingStatuses.TryGetValue(modelId, out var status) ? status : null;
+    }
+
+    public Dictionary<Guid, ProcessingStatus> GetBulkProcessingStatus(List<Guid> guids)
+    {
+        var result = new Dictionary<Guid, ProcessingStatus>();
+
+        foreach (var status in _processingStatuses.Values)
+        {
+            if (guids.Contains(status.Guid))
+            {
+                result[status.Guid] = status;
+            }
+        }
+
+        return result;
     }
 
     private async Task ProcessModelAsync(string modelId, string zipPath, string? name, string? description)

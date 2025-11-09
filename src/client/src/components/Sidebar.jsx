@@ -6,6 +6,7 @@ function Sidebar({ isOpen, onClose, customContent }) {
   const location = useLocation();
 
   const defaultMenuItems = [
+    { path: '/', label: 'Home' },
     { path: '/cloud-points', label: 'Cloud Points Visualizer' },
   ];
 

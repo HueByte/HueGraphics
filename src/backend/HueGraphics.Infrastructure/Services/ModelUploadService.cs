@@ -51,12 +51,10 @@ public class ModelUploadService : IModelUploadService
 
         _logger.LogInformation("Uploaded file saved for model {ModelId}, queuing for background processing", modelId);
 
-        // Queue for background processing
-        _backgroundProcessing.QueueModelProcessing(modelId, zipPath, name, description);
-
-        // Return metadata with pending status
+        // Create metadata with GUID
         var metadata = new PointCloudMetadata
         {
+            Guid = Guid.NewGuid(),
             Id = modelId,
             Name = name ?? Path.GetFileNameWithoutExtension(file.FileName),
             Description = description,
@@ -64,6 +62,9 @@ public class ModelUploadService : IModelUploadService
             Format = PointCloudFormat.ept,
             CreatedAt = DateTime.UtcNow
         };
+
+        // Queue for background processing with GUID
+        _backgroundProcessing.QueueModelProcessing(modelId, zipPath, name, description, metadata.Guid);
 
         return metadata;
     }

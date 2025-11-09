@@ -2,6 +2,7 @@ namespace HueGraphics.Core.Models;
 
 public class ProcessingStatus
 {
+    public Guid Guid { get; set; }
     public required string Id { get; set; }
     public required string Status { get; set; } // "pending", "processing", "completed", "failed"
     public int Progress { get; set; } // 0-100

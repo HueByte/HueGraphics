@@ -60,4 +60,19 @@ export const pointCloudApi = {
     const data = await response.json();
     return data.data;
   },
+
+  async getBulkProcessingStatus(guids) {
+    const response = await fetch(`${API_BASE_URL}/pointcloud/status/bulk`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(guids),
+    });
+    if (!response.ok) {
+      throw new Error('Failed to fetch bulk processing status');
+    }
+    const data = await response.json();
+    return data.data;
+  },
 };

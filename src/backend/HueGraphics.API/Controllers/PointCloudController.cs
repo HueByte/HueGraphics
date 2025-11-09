@@ -152,6 +152,26 @@ public class PointCloudController : ControllerBase
     }
 
     /// <summary>
+    /// Get processing status for multiple models by GUID
+    /// </summary>
+    [HttpPost("status/bulk")]
+    public IActionResult GetBulkProcessingStatus([FromBody] List<Guid> guids)
+    {
+        if (guids == null || guids.Count == 0)
+        {
+            return BadRequest(new { message = "At least one GUID is required" });
+        }
+
+        var statuses = _backgroundProcessing.GetBulkProcessingStatus(guids);
+
+        return Ok(new
+        {
+            success = true,
+            data = statuses
+        });
+    }
+
+    /// <summary>
     /// Get processing status for a model
     /// </summary>
     [HttpGet("{id}/status")]

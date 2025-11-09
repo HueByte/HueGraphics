@@ -16,24 +16,46 @@ function CloudPointsVisualizer() {
   }, []);
 
   useEffect(() => {
-    // Poll for processing statuses
+    // Don't poll if no point clouds
+    if (pointClouds.length === 0) return;
+
+    // Check if all models have completed processing
+    const allCompleted = pointClouds.every((pc) => {
+      const status = processingStatuses[pc.guid];
+      return !status || status.status === 'completed' || status.status === 'failed';
+    });
+
+    // Stop polling if all models are completed
+    if (allCompleted && Object.keys(processingStatuses).length > 0) {
+      console.log('All models completed, stopping status polling');
+      return;
+    }
+
+    // Poll for processing statuses using bulk API
     const interval = setInterval(async () => {
-      const statuses = {};
-      for (const pc of pointClouds) {
-        try {
-          const status = await pointCloudApi.getProcessingStatus(pc.id);
-          if (status) {
-            statuses[pc.id] = status;
-          }
-        } catch (err) {
-          console.error(`Failed to fetch status for ${pc.id}:`, err);
-        }
+      try {
+        // Get GUIDs of all point clouds
+        const guids = pointClouds.map(pc => pc.guid).filter(Boolean);
+
+        if (guids.length === 0) return;
+
+        // Fetch statuses in bulk
+        const bulkStatuses = await pointCloudApi.getBulkProcessingStatus(guids);
+
+        // Convert from GUID-keyed object to a more convenient format
+        const statusMap = {};
+        Object.entries(bulkStatuses).forEach(([guid, status]) => {
+          statusMap[guid] = status;
+        });
+
+        setProcessingStatuses(statusMap);
+      } catch (err) {
+        console.error('Failed to fetch bulk processing status:', err);
       }
-      setProcessingStatuses(statuses);
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(interval);
-  }, [pointClouds]);
+  }, [pointClouds, processingStatuses]);
 
   const fetchPointClouds = async () => {
     try {
@@ -52,7 +74,7 @@ function CloudPointsVisualizer() {
   };
 
   const handleSelectPointCloud = (pointCloud) => {
-    const status = processingStatuses[pointCloud.id];
+    const status = processingStatuses[pointCloud.guid];
     // Don't allow selection if model is still processing
     if (status && status.status !== 'completed') {
       return;
@@ -65,7 +87,7 @@ function CloudPointsVisualizer() {
       <PageNav
         title="Models"
         items={pointClouds.map((pc) => {
-          const status = processingStatuses[pc.id];
+          const status = processingStatuses[pc.guid];
           const isProcessing = status && (status.status === 'pending' || status.status === 'processing');
           const isFailed = status && status.status === 'failed';
 
