@@ -111,6 +111,8 @@ public class PointCloudController : ControllerBase
     /// <param name="description">Model description (optional)</param>
     [HttpPost("upload")]
     [ApiKeyAuth]
+    [RequestSizeLimit(104857600)] // 100 MB
+    [RequestFormLimits(MultipartBodyLengthLimit = 104857600)] // 100 MB
     public async Task<IActionResult> Upload(
         IFormFile file,
         [FromForm] string? name = null,

@@ -28,6 +28,20 @@ try
     // Add services to the container
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+
+    // Configure form options for large file uploads
+    builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+    {
+        options.MultipartBodyLengthLimit = 104857600; // 100 MB
+        options.ValueLengthLimit = 104857600; // 100 MB
+        options.MultipartHeadersLengthLimit = 104857600; // 100 MB
+    });
+
+    // Configure Kestrel for large request bodies
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.Limits.MaxRequestBodySize = 104857600; // 100 MB
+    });
     builder.Services.AddSwaggerGen(c =>
     {
         c.SwaggerDoc("v1", new() { Title = "HueGraphics API", Version = "v1" });
