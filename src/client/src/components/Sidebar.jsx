@@ -16,9 +16,8 @@ function Sidebar({ isOpen, onClose, customContent }) {
         className={`sidebar-overlay ${isOpen ? 'open' : ''}`}
         onClick={onClose}
       />
-      <aside className={`sidebar glass ${isOpen ? 'open' : ''}`}>
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <h3>{customContent?.title || 'Menu'}</h3>
           <button
             className="close-button"
             onClick={onClose}

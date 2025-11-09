@@ -3,12 +3,15 @@
 :root {
   /* Color Palette */
   --bg: #0a0a0f;
+  --bg-elevated: rgba(20, 20, 30, 0.9);
   --fg: #e2e8f0;
+  --fg-muted: #94a3b8;
   --accent: #C63C51;
   --accent-hover: #d94d61;
   --accent-secondary: #8C3061;
   --accent-tertiary: #522258;
   --accent-pink: #ff006e;
+  --accent-purple: #8a2be2;
   --accent-magenta: #d946ef;
   --muted: rgba(148, 163, 184, 0.8);
   --border: rgba(140, 48, 97, 0.3);

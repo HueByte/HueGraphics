@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PointCloudBackground from '../components/PointCloudBackground';
 import PageNav from '../components/PageNav';
 import { pointCloudApi } from '../services/api';
 import './CloudPointsVisualizer.css';
 
 function CloudPointsVisualizer() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [pointClouds, setPointClouds] = useState([]);
   const [selectedPointCloud, setSelectedPointCloud] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -57,14 +59,37 @@ function CloudPointsVisualizer() {
     return () => clearInterval(interval);
   }, [pointClouds, processingStatuses]);
 
+  // Select model from URL parameter when point clouds are loaded
+  useEffect(() => {
+    if (pointClouds.length === 0) return;
+
+    const modelId = searchParams.get('model');
+
+    if (modelId) {
+      // Try to find model by ID from URL
+      const model = pointClouds.find(pc => pc.id === modelId);
+      if (model) {
+        const status = processingStatuses[model.guid];
+        // Only select if not processing
+        if (!status || status.status === 'completed') {
+          setSelectedPointCloud(model);
+          return;
+        }
+      }
+    }
+
+    // Default to first model if no URL parameter or model not found
+    if (!selectedPointCloud && pointClouds.length > 0) {
+      setSelectedPointCloud(pointClouds[0]);
+      setSearchParams({ model: pointClouds[0].id });
+    }
+  }, [pointClouds, searchParams, processingStatuses]);
+
   const fetchPointClouds = async () => {
     try {
       setLoading(true);
       const data = await pointCloudApi.getAllPointClouds();
       setPointClouds(data);
-      if (data.length > 0) {
-        setSelectedPointCloud(data[0]);
-      }
     } catch (err) {
       console.error('Failed to fetch point clouds:', err);
       setError(err.message);
@@ -80,6 +105,8 @@ function CloudPointsVisualizer() {
       return;
     }
     setSelectedPointCloud(pointCloud);
+    // Update URL with selected model ID
+    setSearchParams({ model: pointCloud.id });
   };
 
   return (

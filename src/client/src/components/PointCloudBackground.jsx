@@ -19,7 +19,7 @@ const PointCloudBackground = ({ pointCloudId }) => {
 	const [pointCloudData, setPointCloudData] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
-	const [detailLevel, setDetailLevel] = useState(1.0);
+	const [detailLevel, setDetailLevel] = useState(0.5);
 	const [animationEnabled, setAnimationEnabled] = useState(true);
 
 	// Fetch point cloud data when pointCloudId changes
