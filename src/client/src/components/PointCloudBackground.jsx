@@ -293,10 +293,12 @@ const PointCloudBackground = ({ pointCloudId }) => {
 						const z = originalPositionsForDepth[i3 + 2];
 						const t = zRange > 0 ? (z - minZ) / zRange : 0.5;
 
-						// Purple to pink gradient based on depth
-						colorAttr.array[i3] = 0.54 + t * 0.46; // R: 138/255 -> 255/255
-						colorAttr.array[i3 + 1] = 0.17 - t * 0.17; // G: 43/255 -> 0/255
-						colorAttr.array[i3 + 2] = 0.89 + t * 0.11; // B: 226/255 -> 255/255
+						// Bright purple to black gradient based on depth
+						// Near (t=0): Bright purple (138, 43, 226)
+						// Far (t=1): Black (0, 0, 0)
+						colorAttr.array[i3] = 0.54 * (1 - t); // R: 138/255 -> 0
+						colorAttr.array[i3 + 1] = 0.17 * (1 - t); // G: 43/255 -> 0
+						colorAttr.array[i3 + 2] = 0.89 * (1 - t); // B: 226/255 -> 0
 					}
 					colorAttr.needsUpdate = true;
 				}
