@@ -5,6 +5,7 @@ use crate::{
 };
 use glam::Vec3;
 use rand::Rng;
+use rayon::prelude::*;
 use std::path::Path;
 
 pub struct ModelParser;
@@ -102,15 +103,15 @@ impl ModelParser {
         indices: &[usize],
         config: &PointCloudConfig,
     ) -> Vec<Point> {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let has_normals = !normals.is_empty();
         let has_colors = !colors.is_empty();
 
         match config.sampling_strategy {
             SamplingStrategy::Vertices => {
-                // Use existing vertices
+                // Use existing vertices in parallel
                 vertices
-                    .iter()
+                    .par_iter()
                     .take(config.point_count)
                     .enumerate()
                     .map(|(i, &pos)| {
@@ -138,9 +139,9 @@ impl ModelParser {
                     let triangles: Vec<_> = indices.chunks(3).collect();
 
                     let triangle_weights = if matches!(config.sampling_strategy, SamplingStrategy::AreaWeighted) {
-                        // Calculate triangle areas for weighted sampling
+                        // Calculate triangle areas for weighted sampling in parallel
                         triangles
-                            .iter()
+                            .par_iter()
                             .map(|tri| {
                                 if tri.len() == 3 {
                                     let v0 = vertices[tri[0]];
@@ -159,78 +160,95 @@ impl ModelParser {
 
                     let total_weight: f32 = triangle_weights.iter().sum();
 
-                    for _ in 0..config.point_count {
-                        // Select random triangle (weighted by area if needed)
-                        let mut weight_select = rng.gen::<f32>() * total_weight;
-                        let mut selected_tri = 0;
+                    // Generate points in parallel chunks
+                    let chunk_size = (config.point_count / rayon::current_num_threads()).max(1000);
+                    let chunks: Vec<_> = (0..config.point_count)
+                        .collect::<Vec<_>>()
+                        .chunks(chunk_size)
+                        .map(|chunk| chunk.to_vec())
+                        .collect();
 
-                        for (i, &weight) in triangle_weights.iter().enumerate() {
-                            weight_select -= weight;
-                            if weight_select <= 0.0 {
-                                selected_tri = i;
-                                break;
-                            }
-                        }
+                    points = chunks
+                        .par_iter()
+                        .flat_map(|chunk_indices| {
+                            let mut local_rng = rand::rng();
+                            chunk_indices
+                                .iter()
+                                .filter_map(|_| {
+                                    // Select random triangle (weighted by area if needed)
+                                    let mut weight_select = local_rng.random::<f32>() * total_weight;
+                                    let mut selected_tri = 0;
 
-                        let tri = triangles[selected_tri];
-                        if tri.len() != 3 {
-                            continue;
-                        }
+                                    for (i, &weight) in triangle_weights.iter().enumerate() {
+                                        weight_select -= weight;
+                                        if weight_select <= 0.0 {
+                                            selected_tri = i;
+                                            break;
+                                        }
+                                    }
 
-                        // Random barycentric coordinates
-                        let r1 = rng.gen::<f32>().sqrt();
-                        let r2 = rng.gen::<f32>();
-                        let a = 1.0 - r1;
-                        let b = r1 * (1.0 - r2);
-                        let c = r1 * r2;
+                                    let tri = triangles[selected_tri];
+                                    if tri.len() != 3 {
+                                        return None;
+                                    }
 
-                        let v0 = vertices[tri[0]];
-                        let v1 = vertices[tri[1]];
-                        let v2 = vertices[tri[2]];
+                                    // Random barycentric coordinates
+                                    let r1 = local_rng.random::<f32>().sqrt();
+                                    let r2 = local_rng.random::<f32>();
+                                    let a = 1.0 - r1;
+                                    let b = r1 * (1.0 - r2);
+                                    let c = r1 * r2;
 
-                        let mut pos = v0 * a + v1 * b + v2 * c;
+                                    let v0 = vertices[tri[0]];
+                                    let v1 = vertices[tri[1]];
+                                    let v2 = vertices[tri[2]];
 
-                        // Apply jitter
-                        if config.jitter > 0.0 {
-                            let jitter_amount = config.jitter * 0.1;
-                            pos.x += rng.gen_range(-jitter_amount..jitter_amount);
-                            pos.y += rng.gen_range(-jitter_amount..jitter_amount);
-                            pos.z += rng.gen_range(-jitter_amount..jitter_amount);
-                        }
+                                    let mut pos = v0 * a + v1 * b + v2 * c;
 
-                        let scaled_pos = pos * config.scale;
-                        let mut point = Point::new(scaled_pos);
+                                    // Apply jitter
+                                    if config.jitter > 0.0 {
+                                        let jitter_amount = config.jitter * 0.1;
+                                        pos.x += local_rng.random_range(-jitter_amount..jitter_amount);
+                                        pos.y += local_rng.random_range(-jitter_amount..jitter_amount);
+                                        pos.z += local_rng.random_range(-jitter_amount..jitter_amount);
+                                    }
 
-                        if has_normals && config.include_normals {
-                            let n0 = normals[tri[0]];
-                            let n1 = normals[tri[1]];
-                            let n2 = normals[tri[2]];
-                            let normal = (n0 * a + n1 * b + n2 * c).normalize();
-                            point = point.with_normal(normal);
-                        }
+                                    let scaled_pos = pos * config.scale;
+                                    let mut point = Point::new(scaled_pos);
 
-                        if has_colors && config.include_colors {
-                            let c0 = colors[tri[0]];
-                            let c1 = colors[tri[1]];
-                            let c2 = colors[tri[2]];
-                            let color = c0 * a + c1 * b + c2 * c;
-                            point = point.with_color(color);
-                        }
+                                    if has_normals && config.include_normals {
+                                        let n0 = normals[tri[0]];
+                                        let n1 = normals[tri[1]];
+                                        let n2 = normals[tri[2]];
+                                        let normal = (n0 * a + n1 * b + n2 * c).normalize();
+                                        point = point.with_normal(normal);
+                                    }
 
-                        points.push(point);
-                    }
+                                    if has_colors && config.include_colors {
+                                        let c0 = colors[tri[0]];
+                                        let c1 = colors[tri[1]];
+                                        let c2 = colors[tri[2]];
+                                        let color = c0 * a + c1 * b + c2 * c;
+                                        point = point.with_color(color);
+                                    }
+
+                                    Some(point)
+                                })
+                                .collect::<Vec<_>>()
+                        })
+                        .collect();
                 } else {
                     // Fallback to vertex sampling
                     for _ in 0..config.point_count {
-                        let idx = rng.gen_range(0..vertices.len());
+                        let idx = rng.random_range(0..vertices.len());
                         let mut pos = vertices[idx];
 
                         // Apply jitter
                         if config.jitter > 0.0 {
                             let jitter_amount = config.jitter * 0.1;
-                            pos.x += rng.gen_range(-jitter_amount..jitter_amount);
-                            pos.y += rng.gen_range(-jitter_amount..jitter_amount);
-                            pos.z += rng.gen_range(-jitter_amount..jitter_amount);
+                            pos.x += rng.random_range(-jitter_amount..jitter_amount);
+                            pos.y += rng.random_range(-jitter_amount..jitter_amount);
+                            pos.z += rng.random_range(-jitter_amount..jitter_amount);
                         }
 
                         let scaled_pos = pos * config.scale;

@@ -48,4 +48,16 @@ export const pointCloudApi = {
     }
     return response.json();
   },
+
+  async getProcessingStatus(id) {
+    const response = await fetch(`${API_BASE_URL}/pointcloud/${id}/status`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // No status found
+      }
+      throw new Error(`Failed to fetch processing status for ${id}`);
+    }
+    const data = await response.json();
+    return data.data;
+  },
 };

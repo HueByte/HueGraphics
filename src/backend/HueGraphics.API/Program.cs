@@ -58,6 +58,7 @@ try
     // Register services
     builder.Services.AddScoped<IPointCloudService, PointCloudService>();
     builder.Services.AddScoped<IModelUploadService, ModelUploadService>();
+    builder.Services.AddSingleton<IBackgroundProcessingService, BackgroundProcessingService>();
 
     // Add CORS
     builder.Services.AddCors(options =>

@@ -11,15 +11,18 @@ public class PointCloudController : ControllerBase
 {
     private readonly IPointCloudService _pointCloudService;
     private readonly IModelUploadService _uploadService;
+    private readonly IBackgroundProcessingService _backgroundProcessing;
     private readonly ILogger<PointCloudController> _logger;
 
     public PointCloudController(
         IPointCloudService pointCloudService,
         IModelUploadService uploadService,
+        IBackgroundProcessingService backgroundProcessing,
         ILogger<PointCloudController> logger)
     {
         _pointCloudService = pointCloudService;
         _uploadService = uploadService;
+        _backgroundProcessing = backgroundProcessing;
         _logger = logger;
     }
 
@@ -132,7 +135,7 @@ public class PointCloudController : ControllerBase
             return Ok(new
             {
                 success = true,
-                message = "Model uploaded and processed successfully",
+                message = "Model uploaded successfully and queued for processing",
                 data = metadata
             });
         }
@@ -146,5 +149,25 @@ public class PointCloudController : ControllerBase
             _logger.LogError(ex, "Upload processing failed");
             return StatusCode(500, new { message = "Failed to process upload", error = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Get processing status for a model
+    /// </summary>
+    [HttpGet("{id}/status")]
+    public IActionResult GetProcessingStatus(string id)
+    {
+        var status = _backgroundProcessing.GetProcessingStatus(id);
+
+        if (status == null)
+        {
+            return NotFound(new { message = $"No processing status found for model '{id}'" });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            data = status
+        });
     }
 }

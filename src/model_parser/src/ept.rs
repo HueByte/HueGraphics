@@ -1,5 +1,6 @@
 use crate::{point_cloud::PointCloud, error::Result};
 use glam::Vec3;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
@@ -235,20 +236,22 @@ impl EptBuilder {
             return [0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
         }
 
-        let first = points[0].position;
-        let mut min = Vec3::from(first);
-        let mut max = Vec3::from(first);
-
-        for point in points.iter().skip(1) {
-            let pos = Vec3::from(point.position);
-            min = min.min(pos);
-            max = max.max(pos);
-        }
+        // Parallel min/max calculation using reduce
+        let (min, max) = points
+            .par_iter()
+            .map(|point| {
+                let pos = Vec3::from(point.position);
+                (pos, pos)
+            })
+            .reduce(
+                || (Vec3::splat(f32::MAX), Vec3::splat(f32::MIN)),
+                |(min_a, max_a), (min_b, max_b)| (min_a.min(min_b), max_a.max(max_b)),
+            );
 
         // Add small padding
         let padding = (max - min).length() * 0.01;
-        min -= Vec3::splat(padding);
-        max += Vec3::splat(padding);
+        let min = min - Vec3::splat(padding);
+        let max = max + Vec3::splat(padding);
 
         [
             min.x as f64, min.y as f64, min.z as f64,
@@ -269,43 +272,54 @@ impl EptBuilder {
 
         let root_key = OctreeKey::root();
 
-        // Prepare point data
-        let mut positions = Vec::new();
-        let mut colors = if point_cloud.metadata.has_colors {
-            Some(Vec::new())
-        } else {
-            None
-        };
-        let mut normals = if point_cloud.metadata.has_normals {
-            Some(Vec::new())
-        } else {
-            None
-        };
+        // Prepare point data in parallel
+        let has_colors = point_cloud.metadata.has_colors;
+        let has_normals = point_cloud.metadata.has_normals;
 
-        for point in &point_cloud.points {
-            positions.push(point.position);
+        let data: Vec<_> = point_cloud
+            .points
+            .par_iter()
+            .map(|point| {
+                let position = point.position;
 
-            if let Some(ref mut color_vec) = colors {
-                if let Some(color) = point.color {
-                    // Convert from 0-1 float to 0-255 u8
-                    color_vec.push([
-                        (color[0] * 255.0) as u8,
-                        (color[1] * 255.0) as u8,
-                        (color[2] * 255.0) as u8,
-                    ]);
+                let color = if has_colors {
+                    if let Some(color) = point.color {
+                        // Convert from 0-1 float to 0-255 u8
+                        [
+                            (color[0] * 255.0) as u8,
+                            (color[1] * 255.0) as u8,
+                            (color[2] * 255.0) as u8,
+                        ]
+                    } else {
+                        [255, 255, 255]
+                    }
                 } else {
-                    color_vec.push([255, 255, 255]);
-                }
-            }
+                    [0, 0, 0] // Dummy value, won't be used
+                };
 
-            if let Some(ref mut normal_vec) = normals {
-                if let Some(normal) = point.normal {
-                    normal_vec.push(normal);
+                let normal = if has_normals {
+                    point.normal.unwrap_or([0.0, 0.0, 0.0])
                 } else {
-                    normal_vec.push([0.0, 0.0, 0.0]);
-                }
-            }
+                    [0.0, 0.0, 0.0] // Dummy value, won't be used
+                };
+
+                (position, color, normal)
+            })
+            .collect();
+
+        // Unzip into separate vectors
+        let mut positions = Vec::with_capacity(data.len());
+        let mut color_data = Vec::with_capacity(data.len());
+        let mut normal_data = Vec::with_capacity(data.len());
+
+        for (pos, col, norm) in data {
+            positions.push(pos);
+            color_data.push(col);
+            normal_data.push(norm);
         }
+
+        let colors = if has_colors { Some(color_data) } else { None };
+        let normals = if has_normals { Some(normal_data) } else { None };
 
         // Write binary tile data
         let tile_path = output_dir.join("ept-data").join(format!("{}.bin", root_key.to_path_string()));
