@@ -1,0 +1,89 @@
+.cloud-points-page {
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.page-header h1 {
+  background: linear-gradient(90deg, var(--fg), var(--accent-pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
+}
+
+.page-description {
+  color: var(--muted);
+  font-size: 1.1rem;
+  max-width: 800px;
+}
+
+.page-description strong {
+  color: var(--accent-pink);
+}
+
+.visualizer-container {
+  min-height: 600px;
+  position: relative;
+}
+
+/* Point cloud items in page nav */
+.pc-name {
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.pc-meta {
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  opacity: 0.7;
+}
+
+/* Loading and error states */
+.loading-container,
+.error-message,
+.no-selection,
+.no-models {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(198, 60, 81, 0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-message {
+  border: 1px solid rgba(198, 60, 81, 0.5);
+  background: linear-gradient(135deg,
+    rgba(198, 60, 81, 0.1),
+    rgba(82, 34, 88, 0.1)
+  );
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .visualizer-container {
+    min-height: 400px;
+  }
+}

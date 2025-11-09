@@ -1,0 +1,80 @@
+.page-nav {
+  position: fixed;
+  right: 2rem;
+  top: 8rem;
+  max-height: calc(100vh - 10rem);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-nav-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--fg-muted);
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+}
+
+.page-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.page-nav-list button,
+.page-nav-list a {
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  padding: 0.75rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+  border-left: 2px solid var(--border);
+  display: block;
+  text-decoration: none;
+}
+
+.page-nav-list button:hover,
+.page-nav-list a:hover {
+  border-left-color: var(--accent-pink);
+  color: var(--accent-pink);
+  transform: translateX(-4px);
+}
+
+.page-nav-list button.active,
+.page-nav-list a.active {
+  border-left-color: var(--accent-pink);
+  color: var(--accent-pink);
+  font-weight: 500;
+}
+
+/* Hide on mobile */
+@media (max-width: 1024px) {
+  .page-nav {
+    display: none;
+  }
+}
+
+/* Custom scrollbar for page nav */
+.page-nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.page-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-nav::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.page-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-pink);
+}

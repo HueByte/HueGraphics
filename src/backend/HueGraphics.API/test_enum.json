@@ -1,0 +1,12 @@
+{
+  "id": "test",
+  "sourceFile": "test.glb",
+  "pointCount": 100,
+  "boundsMin": [0, 0, 0],
+  "boundsMax": [1, 1, 1],
+  "hasNormals": true,
+  "hasColors": true,
+  "format": 0,
+  "createdAt": "2024-01-01T00:00:00Z",
+  "fileSizeBytes": 1000
+}

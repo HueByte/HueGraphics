@@ -1,0 +1,80 @@
+using HueGraphics.Core.Interfaces;
+using HueGraphics.Infrastructure.Services;
+using Serilog;
+
+// Configure Serilog
+var logPath = Path.Combine(AppContext.BaseDirectory, "logs", "huegraphics-.log");
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File(logPath,
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting HueGraphics API");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    // Use Serilog for logging
+    builder.Host.UseSerilog();
+
+    // Add services to the container
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new() { Title = "HueGraphics API", Version = "v1" });
+    });
+
+    // Configure point cloud data path
+    builder.Services.Configure<PointCloudSettings>(
+        builder.Configuration.GetSection("PointCloudSettings"));
+
+    // Register services
+    builder.Services.AddScoped<IPointCloudService, PointCloudService>();
+
+    // Add CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowClient", policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+    });
+
+    var app = builder.Build();
+
+    // Configure the HTTP request pipeline
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
+
+    // Use Serilog request logging
+    app.UseSerilogRequestLogging();
+
+    app.UseCors("AllowClient");
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    Log.Information("HueGraphics API started successfully");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

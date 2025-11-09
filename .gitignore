@@ -416,3 +416,39 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+claude.md
+.claude
+.dev-local/
+LocalModels/
+
+# Rust
+/target
+**/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# Node
+node_modules/
+dist/
+*.local
+
+# Point cloud data
+pointcloud-data/
+
+# Configuration files with secrets
+**/appsettings.json
+**/appsettings.Development.json
+!**/appsettings.example.json
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
