@@ -1,3 +1,5 @@
+using HueGraphics.API.Attributes;
+using HueGraphics.Application.Interfaces;
 using HueGraphics.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,13 +10,16 @@ namespace HueGraphics.API.Controllers;
 public class PointCloudController : ControllerBase
 {
     private readonly IPointCloudService _pointCloudService;
+    private readonly IModelUploadService _uploadService;
     private readonly ILogger<PointCloudController> _logger;
 
     public PointCloudController(
         IPointCloudService pointCloudService,
+        IModelUploadService uploadService,
         ILogger<PointCloudController> logger)
     {
         _pointCloudService = pointCloudService;
+        _uploadService = uploadService;
         _logger = logger;
     }
 
@@ -96,5 +101,48 @@ public class PointCloudController : ControllerBase
             return NotFound(new { message = $"EPT hierarchy '{tile}' not found for point cloud '{id}'" });
 
         return Content(hierarchy, "application/json");
+    }
+
+    /// <summary>
+    /// Upload a 3D model for processing (requires API key authentication)
+    /// </summary>
+    /// <param name="file">ZIP file containing 3D model</param>
+    /// <param name="name">Model name (optional)</param>
+    /// <param name="description">Model description (optional)</param>
+    [HttpPost("upload")]
+    [ApiKeyAuth]
+    public async Task<IActionResult> Upload(
+        IFormFile file,
+        [FromForm] string? name = null,
+        [FromForm] string? description = null)
+    {
+        try
+        {
+            _logger.LogInformation("Received upload request for file: {FileName}", file?.FileName);
+
+            if (file == null)
+                return BadRequest(new { message = "File is required" });
+
+            var metadata = await _uploadService.ProcessUploadAsync(file, name, description, HttpContext.RequestAborted);
+
+            _logger.LogInformation("Upload processed successfully: {ModelId}", metadata.Id);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Model uploaded and processed successfully",
+                data = metadata
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "Upload validation failed");
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Upload processing failed");
+            return StatusCode(500, new { message = "Failed to process upload", error = ex.Message });
+        }
     }
 }

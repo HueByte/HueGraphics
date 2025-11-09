@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\HueGraphics.Application\HueGraphics.Application.csproj" />
     <ProjectReference Include="..\HueGraphics.Core\HueGraphics.Core.csproj" />
     <ProjectReference Include="..\HueGraphics.Infrastructure\HueGraphics.Infrastructure.csproj" />
   </ItemGroup>

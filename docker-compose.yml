@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: huegraphics-backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - PointCloudSettings__DataPath=/app/pointcloud-data
+      - UploadSettings__ApiKey=${UPLOAD_API_KEY:-change-me-in-production}
+    volumes:
+      - ${POINTCLOUD_DATA_PATH:-./pointcloud-data}:/app/pointcloud-data
+      - backend-uploads:/app/uploads
+    networks:
+      - huegraphics-network
+    restart: unless-stopped
+
+  # Frontend + Nginx
+  frontend:
+    build:
+      context: ./src/client
+      dockerfile: Dockerfile
+    container_name: huegraphics-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - huegraphics-network
+    restart: unless-stopped
+    # Override nginx config
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+networks:
+  huegraphics-network:
+    driver: bridge
+
+volumes:
+  backend-uploads:

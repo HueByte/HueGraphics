@@ -5,6 +5,8 @@ namespace HueGraphics.Core.Models;
 public class PointCloudMetadata
 {
     public required string Id { get; set; }
+    public string? Name { get; set; }
+    public string? Description { get; set; }
     public required string SourceFile { get; set; }
     public int PointCount { get; set; }
     public float[] BoundsMin { get; set; } = new float[3];

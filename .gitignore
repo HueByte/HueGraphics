@@ -441,6 +441,8 @@ pointcloud-data/
 **/appsettings.json
 **/appsettings.Development.json
 !**/appsettings.example.json
+.env
+!.env.example
 
 # Logs
 logs/

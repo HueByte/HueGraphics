@@ -8,12 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HueGraphics.Application\HueGraphics.Application.csproj" />
     <ProjectReference Include="..\HueGraphics.Core\HueGraphics.Core.csproj" />
     <ProjectReference Include="..\HueGraphics.Domain\HueGraphics.Domain.csproj" />
   </ItemGroup>

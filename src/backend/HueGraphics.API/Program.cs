@@ -1,4 +1,6 @@
+using HueGraphics.Application.Interfaces;
 using HueGraphics.Core.Interfaces;
+using HueGraphics.Domain.Settings;
 using HueGraphics.Infrastructure.Services;
 using Serilog;
 
@@ -31,12 +33,17 @@ try
         c.SwaggerDoc("v1", new() { Title = "HueGraphics API", Version = "v1" });
     });
 
-    // Configure point cloud data path
+    // Configure settings
     builder.Services.Configure<PointCloudSettings>(
         builder.Configuration.GetSection("PointCloudSettings"));
+    builder.Services.Configure<UploadSettings>(
+        builder.Configuration.GetSection("UploadSettings"));
+    builder.Services.Configure<ModelParserSettings>(
+        builder.Configuration.GetSection("ModelParserSettings"));
 
     // Register services
     builder.Services.AddScoped<IPointCloudService, PointCloudService>();
+    builder.Services.AddScoped<IModelUploadService, ModelUploadService>();
 
     // Add CORS
     builder.Services.AddCors(options =>

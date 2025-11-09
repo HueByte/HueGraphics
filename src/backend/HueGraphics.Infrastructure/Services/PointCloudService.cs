@@ -1,6 +1,7 @@
 using System.Text.Json;
 using HueGraphics.Core.Interfaces;
 using HueGraphics.Core.Models;
+using HueGraphics.Domain.Settings;
 using Microsoft.Extensions.Options;
 
 namespace HueGraphics.Infrastructure.Services;
@@ -167,9 +168,4 @@ public class PointCloudService : IPointCloudService
         return directoryInfo.EnumerateFiles("*", SearchOption.AllDirectories)
             .Sum(file => file.Length);
     }
-}
-
-public class PointCloudSettings
-{
-    public string DataPath { get; set; } = "pointcloud-data";
 }
