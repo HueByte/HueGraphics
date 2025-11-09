@@ -22,6 +22,7 @@ function CloudPointsVisualizer() {
     if (pointClouds.length === 0) return;
 
     let isActive = true;
+    let hasCheckedOnce = false;
 
     // Poll for processing statuses using bulk API
     const interval = setInterval(async () => {
@@ -45,15 +46,25 @@ function CloudPointsVisualizer() {
         setProcessingStatuses(prevStatuses => {
           const newStatuses = { ...prevStatuses, ...statusMap };
 
-          // Check if all models have completed processing
-          const allCompleted = pointClouds.every((pc) => {
-            const status = newStatuses[pc.guid];
-            return !status || status.status === 'completed' || status.status === 'failed';
-          });
+          // If this is the first check and we got no statuses, all models are already completed
+          if (!hasCheckedOnce && Object.keys(statusMap).length === 0) {
+            console.log('No processing statuses found - all models already completed, stopping polling');
+            isActive = false;
+            clearInterval(interval);
+            hasCheckedOnce = true;
+            return newStatuses;
+          }
 
-          // Stop polling if all models are completed
-          if (allCompleted && Object.keys(newStatuses).length > 0) {
-            console.log('All models completed, stopping status polling');
+          hasCheckedOnce = true;
+
+          // Check if any models are still being processed
+          const hasProcessingModels = Object.values(newStatuses).some(
+            status => status.status === 'pending' || status.status === 'processing'
+          );
+
+          // Stop polling if no models are being processed
+          if (!hasProcessingModels && Object.keys(newStatuses).length > 0) {
+            console.log('All models completed processing, stopping status polling');
             isActive = false;
             clearInterval(interval);
           }

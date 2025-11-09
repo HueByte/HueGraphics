@@ -2,6 +2,7 @@ using HueGraphics.Application.Interfaces;
 using HueGraphics.Core.Interfaces;
 using HueGraphics.Domain.Settings;
 using HueGraphics.Infrastructure.Services;
+using HueGraphics.Infrastructure.HostedServices;
 using Serilog;
 
 // Configure Serilog
@@ -58,7 +59,11 @@ try
     // Register services
     builder.Services.AddScoped<IPointCloudService, PointCloudService>();
     builder.Services.AddScoped<IModelUploadService, ModelUploadService>();
+    builder.Services.AddScoped<ICleanupService, CleanupService>();
     builder.Services.AddSingleton<IBackgroundProcessingService, BackgroundProcessingService>();
+
+    // Register hosted services (background tasks)
+    builder.Services.AddHostedService<CleanupBackgroundService>();
 
     // Add CORS
     builder.Services.AddCors(options =>

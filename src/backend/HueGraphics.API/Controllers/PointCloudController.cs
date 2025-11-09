@@ -12,17 +12,20 @@ public class PointCloudController : ControllerBase
     private readonly IPointCloudService _pointCloudService;
     private readonly IModelUploadService _uploadService;
     private readonly IBackgroundProcessingService _backgroundProcessing;
+    private readonly ICleanupService _cleanupService;
     private readonly ILogger<PointCloudController> _logger;
 
     public PointCloudController(
         IPointCloudService pointCloudService,
         IModelUploadService uploadService,
         IBackgroundProcessingService backgroundProcessing,
+        ICleanupService cleanupService,
         ILogger<PointCloudController> logger)
     {
         _pointCloudService = pointCloudService;
         _uploadService = uploadService;
         _backgroundProcessing = backgroundProcessing;
+        _cleanupService = cleanupService;
         _logger = logger;
     }
 
@@ -189,5 +192,30 @@ public class PointCloudController : ControllerBase
             success = true,
             data = status
         });
+    }
+
+    /// <summary>
+    /// Manually trigger cleanup operation (requires API key authentication)
+    /// </summary>
+    [HttpPost("cleanup")]
+    [ApiKeyAuth]
+    public async Task<IActionResult> TriggerCleanup()
+    {
+        try
+        {
+            _logger.LogInformation("Manual cleanup triggered via API");
+            await _cleanupService.PerformCleanupAsync(HttpContext.RequestAborted);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Cleanup operation completed successfully"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Manual cleanup failed");
+            return StatusCode(500, new { message = "Cleanup operation failed", error = ex.Message });
+        }
     }
 }
