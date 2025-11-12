@@ -7,6 +7,8 @@ function Sidebar({ isOpen, onClose, customContent }) {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState(['cloud-points']); // Expanded by default
 
+  const isKinectEnabled = import.meta.env.VITE_KINECT_ENABLED === 'true';
+
   const defaultMenuItems = [
     { path: '/', label: 'Home' },
     {
@@ -17,7 +19,7 @@ function Sidebar({ isOpen, onClose, customContent }) {
         { path: '/models-gallery', label: 'Models Gallery' },
       ]
     },
-    { path: '/kinect-live', label: 'Kinect Live Capture' },
+    ...(isKinectEnabled ? [{ path: '/kinect-live', label: 'Kinect Live Capture' }] : []),
   ];
 
   const toggleExpand = (itemId) => {
