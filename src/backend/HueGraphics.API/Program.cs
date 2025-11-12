@@ -3,6 +3,8 @@ using HueGraphics.Core.Interfaces;
 using HueGraphics.Domain.Settings;
 using HueGraphics.Infrastructure.Services;
 using HueGraphics.Infrastructure.HostedServices;
+using HueGraphics.API.Hubs;
+using HueGraphics.API.Services;
 using Serilog;
 
 // Configure Serilog
@@ -27,8 +29,20 @@ try
     builder.Host.UseSerilog();
 
     // Add services to the container
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            // Use camelCase for JSON property names
+            options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        });
     builder.Services.AddEndpointsApiExplorer();
+
+    // Add SignalR
+    builder.Services.AddSignalR()
+        .AddJsonProtocol(options =>
+        {
+            options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        });
 
     // Configure form options for large file uploads
     builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
@@ -61,6 +75,8 @@ try
     builder.Services.AddScoped<IModelUploadService, ModelUploadService>();
     builder.Services.AddScoped<ICleanupService, CleanupService>();
     builder.Services.AddSingleton<IBackgroundProcessingService, BackgroundProcessingService>();
+    builder.Services.AddSingleton<IKinectHubClient, KinectHubBroadcaster>();
+    builder.Services.AddSingleton<IKinectService, KinectService>();
 
     // Register hosted services (background tasks)
     builder.Services.AddHostedService<CleanupBackgroundService>();
@@ -72,7 +88,8 @@ try
         {
             policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials(); // Required for SignalR
         });
     });
 
@@ -93,6 +110,9 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+
+    // Map SignalR hub
+    app.MapHub<KinectHub>("/hubs/kinect");
 
     Log.Information("HueGraphics API started successfully");
     app.Run();

@@ -76,3 +76,77 @@ export const pointCloudApi = {
     return data.data;
   },
 };
+
+export const kinectApi = {
+  async initialize() {
+    const response = await fetch(`${API_BASE_URL}/kinect/initialize`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to initialize Kinect sensor');
+    }
+    return response.json();
+  },
+
+  async startStreaming() {
+    const response = await fetch(`${API_BASE_URL}/kinect/start`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to start Kinect streaming');
+    }
+    return response.json();
+  },
+
+  async stopStreaming() {
+    const response = await fetch(`${API_BASE_URL}/kinect/stop`, {
+      method: 'POST',
+    });
+    if (!response.ok) {
+      throw new Error('Failed to stop Kinect streaming');
+    }
+    return response.json();
+  },
+
+  async getStatus() {
+    const response = await fetch(`${API_BASE_URL}/kinect/status`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch Kinect status');
+    }
+    return response.json();
+  },
+
+  async getLatestFrame() {
+    const response = await fetch(`${API_BASE_URL}/kinect/frame`);
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null; // No frame available
+      }
+      throw new Error('Failed to fetch Kinect frame');
+    }
+    return response.json();
+  },
+
+  // Connect to SSE stream
+  createStreamConnection(onFrame, onError) {
+    const eventSource = new EventSource(`${API_BASE_URL}/kinect/stream`);
+
+    eventSource.onmessage = (event) => {
+      try {
+        const frame = JSON.parse(event.data);
+        onFrame(frame);
+      } catch (err) {
+        console.error('Error parsing frame data:', err);
+        onError(err);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE connection error:', error);
+      onError(error);
+      eventSource.close();
+    };
+
+    return eventSource;
+  },
+};

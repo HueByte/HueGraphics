@@ -15,12 +15,13 @@
 ## Features
 
 - **3D Point Cloud Rendering** - Interactive WebGL-based visualization with Three.js
+- **Kinect v2 Live Streaming** - Real-time point cloud capture and visualization via SignalR WebSocket
 - **EPT Format Support** - Efficient point cloud rendering using Entwine Point Tiles
 - **Camera Controls** - Smooth orbit, pan, and zoom controls with camera-controls library
 - **Dynamic Animations** - Chaotic morph-in effects and floating animations
 - **Detail Level Control** - Adjustable point density for performance optimization
 - **Model Upload API** - Upload 3D models (OBJ, FBX, GLTF, etc.) with automatic processing
-- **Clean Architecture** - .NET 8 backend with domain-driven design
+- **Clean Architecture** - .NET 10 backend with domain-driven design
 - **Rust Model Parser** - High-performance 3D model to point cloud conversion
 - **Eidolon Line Theme** - Cyberpunk-inspired dark theme with crimson/purple/pink palette
 - **Docker Support** - Full containerization with nginx routing
@@ -31,26 +32,21 @@
 .
 ├── src/
 │   ├── client/                    # React web application
-│   │   ├── package.json
-│   │   ├── vite.config.js
-│   │   └── src/
-│   │       ├── components/
-│   │       ├── layouts/
-│   │       └── pages/
-│   ├── backend/                   # ASP.NET Core API
-│   │   ├── HueGraphics.sln
-│   │   ├── HueGraphics.API/       # Web API project
-│   │   ├── HueGraphics.Core/      # Domain models & interfaces
-│   │   └── HueGraphics.Infrastructure/  # Services implementation
+│   ├── backend/                   # ASP.NET Core API (.NET 10)
+│   ├── kinect-bridge/             # Kinect v2 bridge (.NET Framework 4.8)
 │   └── model_parser/              # Rust CLI tool
-│       ├── Cargo.toml
-│       ├── src/
-│       │   ├── config.rs
-│       │   ├── parser.rs
-│       │   ├── point_cloud.rs
-│       │   ├── ept.rs
-│       │   └── main.rs
-│       └── README.md
+├── scripts/                       # Development and utility scripts
+│   ├── run-dev.sh
+│   ├── run-dev.bat
+│   ├── start-dev.sh
+│   └── start-dev.ps1
+├── docs/                          # Public documentation
+│   ├── GETTING_STARTED.md
+│   ├── KINECT_SETUP.md
+│   └── START_DEV.md
+├── .dev-local/                    # Internal development docs (gitignored)
+│   ├── STYLING_GUIDE.md
+│   └── upload-models.ps1
 └── pointcloud-data/               # Generated point cloud data
 ```
 
@@ -59,9 +55,16 @@
 ### Prerequisites
 
 - **Node.js** 18+ and npm
-- **.NET 8 SDK**
+- **.NET 10 SDK** (LTS)
+- **.NET Framework 4.8** (for Kinect bridge, Windows only)
 - **Rust** 1.70+ and Cargo (for model parser)
 - **Docker** and Docker Compose (for containerized deployment)
+
+### Documentation
+
+- **[Getting Started](docs/GETTING_STARTED.md)** - Comprehensive setup guide
+- **[Kinect Setup](docs/KINECT_SETUP.md)** - Kinect v2 integration guide
+- **[Start Dev](docs/START_DEV.md)** - Quick development startup guide
 
 ### Local Development
 
@@ -251,9 +254,18 @@ server {
 
 ### Backend
 
-- **.NET 8** - High-performance web API
+- **.NET 10** - High-performance web API (LTS)
+- **SignalR** - Real-time WebSocket communication
 - **Clean Architecture** - Separation of concerns
 - **EPT Support** - Binary point cloud format
+
+### Kinect Integration
+
+- **.NET Framework 4.8** - Bridge for Kinect SDK v2
+- **Microsoft Kinect SDK v2** - Hardware access
+- **HTTP/JSON** - Bridge to API communication
+- **Configurable Density** - Adjustable point sampling (10%-100%)
+- **Depth Gradient** - Optional depth-based coloring
 
 ### Model Parser
 

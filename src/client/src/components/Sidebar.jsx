@@ -17,6 +17,7 @@ function Sidebar({ isOpen, onClose, customContent }) {
         { path: '/models-gallery', label: 'Models Gallery' },
       ]
     },
+    { path: '/kinect-live', label: 'Kinect Live Capture' },
   ];
 
   const toggleExpand = (itemId) => {
