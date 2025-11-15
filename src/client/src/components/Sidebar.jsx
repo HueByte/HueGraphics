@@ -19,6 +19,7 @@ function Sidebar({ isOpen, onClose, customContent }) {
         { path: '/models-gallery', label: 'Models Gallery' },
       ]
     },
+    { path: '/fractal-viewer', label: 'Fractal Viewer' },
     ...(isKinectEnabled ? [{ path: '/kinect-live', label: 'Kinect Live Capture' }] : []),
   ];
 
