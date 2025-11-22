@@ -400,18 +400,68 @@ const PointCloudBackground = ({ pointCloudId }) => {
 		// Cleanup
 		return () => {
 			window.removeEventListener("resize", handleResize);
+
+			// Cancel animation frame
 			if (animationFrameRef.current) {
 				cancelAnimationFrame(animationFrameRef.current);
+				animationFrameRef.current = null;
 			}
+
+			// Dispose camera controls
 			if (cameraControls) {
 				cameraControls.dispose();
 			}
-			if (container && renderer.domElement) {
-				container.removeChild(renderer.domElement);
+
+			// Remove points from scene
+			if (points && scene) {
+				scene.remove(points);
 			}
-			geometry.dispose();
-			material.dispose();
-			renderer.dispose();
+
+			// Dispose geometry and material
+			if (geometry) {
+				geometry.dispose();
+			}
+			if (material) {
+				material.dispose();
+			}
+
+			// Dispose scene objects
+			if (scene) {
+				scene.traverse((object) => {
+					if (object.geometry) {
+						object.geometry.dispose();
+					}
+					if (object.material) {
+						if (Array.isArray(object.material)) {
+							object.material.forEach(mat => mat.dispose());
+						} else {
+							object.material.dispose();
+						}
+					}
+				});
+				scene.clear();
+			}
+
+			// Dispose renderer
+			if (renderer) {
+				renderer.dispose();
+			}
+
+			// Remove canvas from DOM
+			if (container && renderer && renderer.domElement) {
+				try {
+					container.removeChild(renderer.domElement);
+				} catch (e) {
+					// Element might already be removed
+				}
+			}
+
+			// Clear refs
+			sceneRef.current = null;
+			rendererRef.current = null;
+			cameraRef.current = null;
+			cameraControlsRef.current = null;
+			pointsRef.current = null;
 		};
 	}, [pointCloudData, detailLevel, animationEnabled, depthColoringEnabled, cameraDistanceColoring]);
 

@@ -1,5 +1,30 @@
 .models-gallery-page {
   width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  padding-top: calc(48px + 3rem);
+}
+
+@media (max-width: 1024px) {
+  .models-gallery-page {
+    padding: 2rem;
+    padding-top: calc(48px + 2.5rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .models-gallery-page {
+    padding: 1.5rem;
+    padding-top: calc(44px + 2rem);
+  }
+}
+
+@media (max-width: 480px) {
+  .models-gallery-page {
+    padding: 1rem;
+    padding-top: calc(44px + 1.5rem);
+  }
 }
 
 .page-header {

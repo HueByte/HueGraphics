@@ -124,12 +124,23 @@ function FractalViewer() {
 
 		return () => {
 			window.removeEventListener("resize", handleResize);
-			controls.dispose();
+
+			// Cancel any pending animation frames
+			if (animationFrameRef.current) {
+				cancelAnimationFrame(animationFrameRef.current);
+				animationFrameRef.current = null;
+			}
+
+			// Dispose controls
+			if (controls) {
+				controls.dispose();
+			}
 
 			// Dispose all point clouds
 			pointCloudsRef.current.forEach(cloud => {
 				if (cloud.geometry) cloud.geometry.dispose();
 				if (cloud.material) cloud.material.dispose();
+				if (sceneRef.current) sceneRef.current.remove(cloud);
 			});
 			pointCloudsRef.current = [];
 
@@ -138,6 +149,7 @@ function FractalViewer() {
 				composerRef.current.passes.forEach(pass => {
 					if (pass.dispose) pass.dispose();
 				});
+				composerRef.current = null;
 			}
 
 			// Dispose scene objects
@@ -152,12 +164,28 @@ function FractalViewer() {
 						}
 					}
 				});
+				sceneRef.current.clear();
+				sceneRef.current = null;
 			}
 
-			renderer.dispose();
-			if (containerRef.current && renderer.domElement) {
-				containerRef.current.removeChild(renderer.domElement);
+			// Dispose renderer
+			if (renderer) {
+				renderer.dispose();
 			}
+
+			// Remove canvas from DOM
+			if (containerRef.current && renderer && renderer.domElement) {
+				try {
+					containerRef.current.removeChild(renderer.domElement);
+				} catch (e) {
+					// Element might already be removed
+				}
+			}
+
+			// Clear refs
+			rendererRef.current = null;
+			cameraRef.current = null;
+			controlsRef.current = null;
 		};
 	}, [autoRotate]);
 
@@ -247,6 +275,7 @@ function FractalViewer() {
 		return () => {
 			if (animationFrameRef.current) {
 				cancelAnimationFrame(animationFrameRef.current);
+				animationFrameRef.current = null;
 			}
 		};
 	}, [selectedFractal, useColors, useMorphing]);

@@ -20,6 +20,7 @@ function Sidebar({ isOpen, onClose, customContent }) {
       ]
     },
     { path: '/fractal-viewer', label: 'Fractal Viewer' },
+    { path: '/audio-visualizer', label: 'Audio Visualizer' },
     ...(isKinectEnabled ? [{ path: '/kinect-live', label: 'Kinect Live Capture' }] : []),
   ];
 

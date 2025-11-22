@@ -32,6 +32,9 @@ function KinectLiveCapture() {
 	useEffect(() => {
 		if (!containerRef.current) return;
 
+		// Store container ref for cleanup
+		const container = containerRef.current;
+
 		// Scene setup
 		const scene = new THREE.Scene();
 		scene.background = new THREE.Color(0x0a0a0f);
@@ -40,7 +43,7 @@ function KinectLiveCapture() {
 		// Camera setup
 		const camera = new THREE.PerspectiveCamera(
 			75,
-			containerRef.current.clientWidth / containerRef.current.clientHeight,
+			container.clientWidth / container.clientHeight,
 			0.01,
 			100
 		);
@@ -50,11 +53,11 @@ function KinectLiveCapture() {
 		// Renderer setup
 		const renderer = new THREE.WebGLRenderer({ antialias: true });
 		renderer.setSize(
-			containerRef.current.clientWidth,
-			containerRef.current.clientHeight
+			container.clientWidth,
+			container.clientHeight
 		);
 		renderer.setPixelRatio(window.devicePixelRatio);
-		containerRef.current.appendChild(renderer.domElement);
+		container.appendChild(renderer.domElement);
 		rendererRef.current = renderer;
 
 		// Controls
@@ -76,8 +79,9 @@ function KinectLiveCapture() {
 		scene.add(gridHelper);
 
 		// Animation loop
+		let animationFrameId;
 		const animate = () => {
-			requestAnimationFrame(animate);
+			animationFrameId = requestAnimationFrame(animate);
 			controls.update();
 			renderer.render(scene, camera);
 		};
@@ -99,11 +103,67 @@ function KinectLiveCapture() {
 		// Cleanup
 		return () => {
 			window.removeEventListener("resize", handleResize);
-			controls.dispose();
-			renderer.dispose();
-			if (containerRef.current && renderer.domElement) {
-				containerRef.current.removeChild(renderer.domElement);
+
+			// Cancel animation frame
+			if (animationFrameId) {
+				cancelAnimationFrame(animationFrameId);
 			}
+
+			// Dispose controls
+			if (controls) {
+				controls.dispose();
+			}
+
+			// Dispose point cloud if exists
+			if (pointCloudRef.current) {
+				if (pointCloudRef.current.geometry) {
+					pointCloudRef.current.geometry.dispose();
+				}
+				if (pointCloudRef.current.material) {
+					pointCloudRef.current.material.dispose();
+				}
+				if (scene) {
+					scene.remove(pointCloudRef.current);
+				}
+				pointCloudRef.current = null;
+			}
+
+			// Dispose scene objects
+			if (scene) {
+				scene.traverse((object) => {
+					if (object.geometry) {
+						object.geometry.dispose();
+					}
+					if (object.material) {
+						if (Array.isArray(object.material)) {
+							object.material.forEach(mat => mat.dispose());
+						} else {
+							object.material.dispose();
+						}
+					}
+				});
+				scene.clear();
+			}
+
+			// Dispose renderer
+			if (renderer) {
+				renderer.dispose();
+			}
+
+			// Remove canvas from DOM
+			if (container && renderer && renderer.domElement) {
+				try {
+					container.removeChild(renderer.domElement);
+				} catch (e) {
+					// Element might already be removed
+				}
+			}
+
+			// Clear refs
+			sceneRef.current = null;
+			rendererRef.current = null;
+			cameraRef.current = null;
+			controlsRef.current = null;
 		};
 	}, []);
 
